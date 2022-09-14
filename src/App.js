@@ -12,10 +12,13 @@ function App() {
   });
 
   const [oughtContent, setOughtContent] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     Axios.get("http://localhost:5000/api/get").then((response) => {
       setOughtContent(response.data);
+      setIsLoading(false);
     });
   }, [oughtContent]);
 
@@ -28,6 +31,22 @@ function App() {
     });
   };
 
+  const onRemove = async (id) => {
+    try {
+      await Axios({
+        url: `http://localhost:5000/api/delete${id}`,
+        method: "DELETE",
+      });
+      const data = await Axios({
+        url: `http://localhost:5000/api/get`,
+        method: "GET",
+      });
+      setWorkContent(data.data);
+    } catch (e) {
+      setError(e);
+    }
+  };
+
   const getValue = (e) => {
     const { name, value } = e.target;
     setWorkContent({
@@ -35,6 +54,14 @@ function App() {
       [name]: value,
     });
   };
+
+  if (error) {
+    return <>에러: {error.message}</>;
+  }
+
+  if (isLoading) {
+    return <>Loading...</>;
+  }
 
   return (
     <div className="App">
@@ -44,7 +71,9 @@ function App() {
           <div>
             <h2>{element.title}</h2>
             <div>{ReactHtmlParser(element.content)}</div>
-            <button>삭제</button>
+            <button variant="danger" onClick={onRemove}>
+              삭제
+            </button>
           </div>
         ))}
       </div>
